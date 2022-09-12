@@ -36,6 +36,7 @@ const ProductDetail = loadable(() => import('./pages/product-detail'), {fallback
 const ProductList = loadable(() => import('./pages/product-list'), {fallback})
 const Wishlist = loadable(() => import('./pages/account/wishlist'), {fallback})
 const PageNotFound = loadable(() => import('./pages/page-not-found'))
+const CoveoSearch = loadable(() => import('./pages/coveo-search'), {fallback})
 
 const routes = [
     {
@@ -88,7 +89,7 @@ const routes = [
     },
     {
         path: '/search',
-        component: ProductList
+        component: CoveoSearch
     },
     {
         path: '/category/:categoryId',
