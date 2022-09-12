@@ -2,7 +2,7 @@ import React from "react";
 import PropTypes from "prop-types";
 
 import { loadFieldActions, loadQueryActions, loadSearchActions, loadSearchAnalyticsActions } from "@coveo/atomic/headless";
-import { AtomicSearchBox, AtomicResultList } from "@coveo/atomic-react";
+import { AtomicResultList } from "@coveo/atomic-react";
 
 
 import { Box, Grid, Stack, useMultiStyleConfig, AspectRatio, Text, Link } from "@chakra-ui/react";
@@ -12,11 +12,9 @@ import { useIntl } from "react-intl";
 import { productUrlBuilder } from "../../utils/url";
 
 
-const CoveoSearch = (props) => {
+const CoveoSearch = () => {
   const intl = useIntl();
-  const {
-    searchQuery
-  } = props;
+  
   const styles = useMultiStyleConfig("ProductTile");
   const dynamicImageProps = {
     widths: ["50vw", "50vw", "20vw", "20vw", "25vw"],
@@ -24,19 +22,12 @@ const CoveoSearch = (props) => {
 
   return (
     <div>
-      <atomic-search-interface>
+      <atomic-search-interface language='en'>
 
         <Grid templateColumns={{ base: "1fr", md: "280px 1fr" }} columnGap={6}>
           <Stack display={{ base: "none", md: "flex" }}>
             <atomic-facet-manager>
-              <atomic-numeric-facet
-                field="ec_price"
-                label="Price"
-                number-of-values={5}
-                range-algorithm="even"
-                filter-facet-count={false}
-                facet-id="price-facet"
-              ></atomic-numeric-facet>
+              <atomic-numeric-facet field='ec_price' label='Price'></atomic-numeric-facet>
               <atomic-facet field='year' label='Year'></atomic-facet>
             </atomic-facet-manager>
           </Stack>
@@ -91,15 +82,9 @@ CoveoSearch.getProps = async ({ engine, location }) => {
   const newProps = { searchQuery };
 
   if (!engine) {
-    // engine = buildSearchEngine({
-    //     configuration: getSampleSearchEngineConfiguration()
-    // })
     const configuration = {
       accessToken: "xx048a95cc-60a2-4bc0-ade1-fd2b24dc8870",
-      organizationId: "barcagroupproductionkwvdy6lp",
-      search : {
-        pipeline : 'Sports'
-      }
+      organizationId: "barcagroupproductionkwvdy6lp"
     };
     await searchInterface.initialize(configuration);
 

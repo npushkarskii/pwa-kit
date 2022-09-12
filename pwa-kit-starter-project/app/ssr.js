@@ -56,6 +56,7 @@ const {handler} = runtime.createHandler(options, (app) => {
     })
     app.get('/robots.txt', runtime.serveStaticFile('static/robots.txt'))
     app.get('/favicon.ico', runtime.serveStaticFile('static/ico/favicon.ico'))
+    app.get('/lang/en.json', runtime.serveStaticFile('static/lang/en.json'))
 
     app.get('/worker.js(.map)?', runtime.serveServiceWorker)
     app.get('*', runtime.render)
