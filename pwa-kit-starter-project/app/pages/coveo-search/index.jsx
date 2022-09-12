@@ -21,7 +21,11 @@ const CoveoSearch = () => {
   };
 
   return (
-    <div>
+    <>
+      <link
+        rel="stylesheet"
+        href="https://static.cloud.coveo.com/atomic/v1/themes/coveo.css"
+      />
       <atomic-search-interface language='en'>
 
         <Grid templateColumns={{ base: "1fr", md: "280px 1fr" }} columnGap={6}>
@@ -66,7 +70,7 @@ const CoveoSearch = () => {
           </Box>
         </Grid>
       </atomic-search-interface>
-    </div>
+    </>
   );
 };
 
