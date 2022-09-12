@@ -1,236 +1,132 @@
-/*
- * Copyright (c) 2021, salesforce.com, inc.
- * All rights reserved.
- * SPDX-License-Identifier: BSD-3-Clause
- * For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
- */
-
-import React, { useContext, useEffect, useState } from "react";
+import React from "react";
 import PropTypes from "prop-types";
-import { useHistory, useParams } from "react-router-dom";
-import { FormattedMessage, useIntl } from "react-intl";
-import ProductTile, {
-  Skeleton as ProductTileSkeleton,
-} from "../../components/product-tile";
-import { CloseIcon } from "@chakra-ui/icons";
-// Components
-import {
-  Box,
-  Flex,
-  SimpleGrid,
-  Grid,
-  Select,
-  Text,
-  FormControl,
-  Stack,
-  useDisclosure,
-  Button,
-  Drawer,
-  DrawerBody,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerContent,
-  DrawerCloseButton,
-  Link,
-  useMultiStyleConfig,
-  AspectRatio,
-  Heading,
-} from "@chakra-ui/react";
 
-// Icons
-import { FilterIcon, ChevronDownIcon } from "../../components/icons";
-
-// Constants
-import { EngineContext } from "../../components/_app";
-import { buildSearchEngine, loadFieldActions, AtomicResultList, AtomicSearchInterface } from "@coveo/atomic-react";
-import ProductCard from "./product-card";
+import { loadFieldActions, loadQueryActions, loadSearchActions, loadSearchAnalyticsActions } from "@coveo/atomic/headless";
+import { AtomicSearchBox, AtomicResultList } from "@coveo/atomic-react";
 
 
-const CoveoSearch = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [resultsList, setResultsList] = useState([]);
-  const [isLoadingResultsList, setIsLoadingResultsList] = useState(false);
+import { Box, Grid, Stack, useMultiStyleConfig, AspectRatio, Text, Link } from "@chakra-ui/react";
+import DynamicImage from "../../components/dynamic-image";
 
-  const engine = buildSearchEngine({
-    configuration: {
-      accessToken: "xx048a95cc-60a2-4bc0-ade1-fd2b24dc8870",
-      organizationId: "barcagroupproductionkwvdy6lp",
-      search : {
-        pipeline : 'Sports'
-      }
-    }
-  });
-  const fieldActions =  loadFieldActions(engine);
-  engine.dispatch(fieldActions.registerFieldsToInclude("ec_name,ec_price,ec_images,ec_productid,sf_c_currency,sf_c_image,sf_c_price,title,uri".split(",")));
+import { useIntl } from "react-intl";
+import { productUrlBuilder } from "../../utils/url";
 
-  useEffect(() => {
-    const unsub = engine.subscribe(() => {
-      setSearchQuery(engine?.state?.query?.q);
-      setResultsList(engine.state?.search?.results);
-      setIsLoadingResultsList(engine.state?.search?.isLoading);
-    });
 
-    return () => unsub();
-  }, [engine.state?.query?.q]);
+const CoveoSearch = (props) => {
+  const intl = useIntl();
+  const {
+    searchQuery
+  } = props;
+  const styles = useMultiStyleConfig("ProductTile");
+  const dynamicImageProps = {
+    widths: ["50vw", "50vw", "20vw", "20vw", "25vw"],
+  };
 
   return (
-    <>
-      <div id="coveo-search-page">
-        <style>{myStyles}</style>
+    <div>
+      <atomic-search-interface>
 
-        <Box
-          className="sf-product-list-page"
-          data-testid="sf-product-list-page"
-          layerStyle="page"
-          paddingTop={{ base: 6, lg: 8 }}
-        >
-          <Stack
-            display={{ base: "none", lg: "flex" }}
-            direction="row"
-            justify="flex-start"
-            align="flex-start"
-            spacing={4}
-            marginBottom={6}
-          >
-            <Flex align="left" width="287px">
-              <Heading as="h2" size="lg" marginLeft={5} paddingTop={10}>
-                {searchQuery}
-              </Heading>
-            </Flex>
-
-            <Box flex={1}  paddingTop={"45px"} justifyContent={'flex-end'} display={'flex'}>
-              <atomic-sort-dropdown>
-                <atomic-sort-expression
-                  label="relevance"
-                  expression="relevancy"
-                ></atomic-sort-expression>
-                <atomic-sort-expression
-                  label="Price low to high"
-                  expression="ec_price ascending"
-                ></atomic-sort-expression>
-                <atomic-sort-expression
-                  label="Price high to low"
-                  expression="ec_price descending"
-                ></atomic-sort-expression>
-              </atomic-sort-dropdown>
-            </Box>
+        <Grid templateColumns={{ base: "1fr", md: "280px 1fr" }} columnGap={6}>
+          <Stack display={{ base: "none", md: "flex" }}>
+            <atomic-facet-manager>
+              <atomic-numeric-facet
+                field="ec_price"
+                label="Price"
+                number-of-values={5}
+                range-algorithm="even"
+                filter-facet-count={false}
+                facet-id="price-facet"
+              ></atomic-numeric-facet>
+              <atomic-facet field='year' label='Year'></atomic-facet>
+            </atomic-facet-manager>
           </Stack>
+          <Box>
+            <AtomicResultList
+              display='grid'
+              template={(r) => (
+                <>
+                  <Link data-testid='product-tile' {...styles.container} href={productUrlBuilder({ id: r.raw.ec_productid }, intl.local)}>
+                  <Box {...styles.imageWrapper}>
+                    <AspectRatio {...styles.image}>
+                      <DynamicImage
+                        src={`${r.raw.ec_images[0]}[?sw={width}&q=60]`}
+                        widths={dynamicImageProps?.widths}
+                        imageProps={{
+                          alt: "image.alt",
+                          ...dynamicImageProps?.imageProps,
+                        }}
+                      />
+                    </AspectRatio>
+                  </Box>
 
-          {/* Body  */}
-          <atomic-no-results></atomic-no-results>
-          <Grid
-            templateColumns={{ base: "1fr", md: "280px 1fr" }}
-            columnGap={6}
-          >
-            <Stack display={{ base: "none", md: "flex" }}>
-              <atomic-facet-manager>
-                <atomic-numeric-facet
-                  field="ec_price"
-                  label="Price"
-                  number-of-values={5}
-                  range-algorithm="even"
-                  filter-facet-count={false}
-                  facet-id="price-facet"
-                ></atomic-numeric-facet>
-                <atomic-facet
-                  field="year"
-                  label="Year"
-                  facet-id="year-facet"
-                ></atomic-facet>
-              </atomic-facet-manager>
-            </Stack>
-            <Box>
-              <Box marginY={3}>
-                <atomic-breadbox></atomic-breadbox>
-              </Box>
-              <Box marginY={3}>
-                <atomic-did-you-mean></atomic-did-you-mean>
-              </Box>
-              <Box marginY={3}>
-                <atomic-query-summary></atomic-query-summary>
-              </Box>
-              <SimpleGrid
-                columns={[2, 2, 3, 3]}
-                spacingX={4}
-                spacingY={{ base: 12, lg: 16 }}
-              >
-                {isLoadingResultsList || !resultsList.length > 0 ? (
-                  new Array(9)
-                    .fill(0)
-                    .map((value, index) => <ProductTileSkeleton key={index} />)
-                ) : (
-                  <>
-                    {resultsList.map((result) => {
-                      return (
-                        <React.Fragment key={result.uniqueId}>
-                          <ProductCard result={result} />
-                        </React.Fragment>
-                      );
-                    })}
-                  </>
-                )}
-              </SimpleGrid>
-              <Flex
-                justifyContent={["center", "center", "flex-start"]}
-                paddingTop={8}
-              >
-                <atomic-pager></atomic-pager>
-              </Flex>
-            </Box>
-          </Grid>
+                  {/* Title */}
+                    <Text {...styles.title}>{r.raw.ec_name}</Text>
 
-        </Box>
-      </div>
-    </>
+                  {/* Price */}
+                  <Text {...styles.price}>
+                    {
+                      r.raw.ec_price
+                    }
+                  </Text>
+                  </Link>
+                </>
+              )}
+            />
+          </Box>
+        </Grid>
+      </atomic-search-interface>
+    </div>
   );
 };
 
 CoveoSearch.getTemplateName = () => "coveo-search";
 
+CoveoSearch.shouldGetProps = ({ previousLocation, location }) => !previousLocation || previousLocation.pathname !== location.pathname || previousLocation.search !== location.search;
+
+CoveoSearch.getProps = async ({ engine, location }) => {
+  const searchInterface = document.querySelector("atomic-search-interface");
+
+  const urlParams = new URLSearchParams(location.search);
+  let searchQuery = urlParams.get("q");
+  const newProps = { searchQuery };
+
+  if (!engine) {
+    // engine = buildSearchEngine({
+    //     configuration: getSampleSearchEngineConfiguration()
+    // })
+    const configuration = {
+      accessToken: "xx048a95cc-60a2-4bc0-ade1-fd2b24dc8870",
+      organizationId: "barcagroupproductionkwvdy6lp",
+      search : {
+        pipeline : 'Sports'
+      }
+    };
+    await searchInterface.initialize(configuration);
+
+    newProps.engine = engine = searchInterface.engine;
+
+    const fieldActions = loadFieldActions(engine);
+    engine.dispatch(fieldActions.registerFieldsToInclude("ec_name,ec_price,ec_images,ec_productid,sf_c_currency,sf_c_image,sf_c_price,title,uri".split(",")));
+  }
+
+  // execute search
+  const searchActions = loadSearchActions(engine);
+  const queryActions = loadQueryActions(engine);
+  const analyticsActions = loadSearchAnalyticsActions(engine);
+  await engine.dispatch(queryActions.updateQuery({ q: searchQuery || "test" }));
+  const searchResults = await engine.dispatch(searchActions.executeSearch(analyticsActions.logSearchboxSubmit()));
+
+  newProps.searchResults = searchResults;
+
+  return newProps;
+};
+
+CoveoSearch.propTypes = {
+  engine: PropTypes.object,
+  isLoading: PropTypes.bool,
+
+  location: PropTypes.object,
+  searchQuery: PropTypes.string,
+};
+
 export default CoveoSearch;
-
-const myStyles = `
-
-
-atomic-result-list::part(result-list){
-    gap: 1rem 1rem;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-@media screen and (max-width: 30em) {
-    atomic-result-list::part(result-list){
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-
-}
-
-atomic-numeric-facet::part(facet) {
-    border: none
-}
-
-
- 
-atomic-facet::part(facet) {
-    border: none
-}
-
-#mobile-view-sort atomic-sort-dropdown::part(label){
-  display: none
-}
-
-#product-card-container{
-  padding : 10px;
-  transition: all 0.2s ease-in-out;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  position: relative
-}
-
-#product-card-container:hover{
--webkit-box-shadow: 0px 0px 9px 3px rgba(0,0,0,0.24); 
-box-shadow: 0px 0px 9px 3px rgba(0,0,0,0.24);
-border: 1px solid #D3D3D3
-
-}
-
-    `;
